@@ -1,8 +1,9 @@
 # Thuisbezorgd API Reference
 
-> **Phase 1 + Phase 2 capture complete** — auth, restaurant listing, and menu
-> fully confirmed. BFF token exchange + basket/order endpoints still need one
-> more targeted capture (see TODO). All confirmed data marked ✓.
+> **Phase 3 capture complete** — all confirmed. Auth, restaurant listing, menu,
+> basket create/update, checkout summary, addresses, and payment methods all
+> captured via HAR export. Order placement (payment step) handled by Adyen on
+> `pay.thuisbezorgd.nl` — out of scope for automated flow.
 
 ---
 
@@ -13,17 +14,23 @@
 | Restaurant listing | `www.thuisbezorgd.nl/en/delivery/food/{city}-{postcode}` | No (public SSR) |
 | Restaurant menu | `www.thuisbezorgd.nl/en/menu/{slug}` | No (public SSR) |
 | Auth | `auth.thuisbezorgd.nl` | — |
-| BFF (cart, orders, account) | `https://cw-api.takeaway.com/api/v34/` | Yes — BFF JWT |
-| JetPay | `https://consumer.takeawaypay.com/pay/api/v1` | Yes — BFF JWT |
+| REST API (basket, checkout, account) | `https://rest.api.eu-central-1.production.jet-external.com` | Yes — PKCE Bearer token |
+| Order placement + payment | `pay.thuisbezorgd.nl` (Adyen) | Out of scope |
+
+**⚠️ The basket/order API is NOT at `cw-api.takeaway.com`.** It is at
+`rest.api.eu-central-1.production.jet-external.com`. The PKCE `access_token`
+is used as the Bearer token directly — no separate token exchange needed.
 
 **Two data retrieval strategies (confirmed):**
 - Public pages (restaurants, menu): `GET` the SSR Next.js page, parse embedded state JSON
-- Interactive operations (cart, orders): `GET/POST` BFF endpoints with `Authorization: Bearer {bff_jwt}`
+- Interactive operations (basket, account): `GET/POST` REST endpoints with `Authorization: Bearer {access_token}`
 
 **Price encoding (⚠️ inconsistent across sources):**
 - `deliveryFees.*.fee` in restaurant listing: **integer cents** (`299` = €2.99) ✓
 - `basePrice` / `additionPrice` in menu CDN data: **float euros** (`12.45` = €12.45) ✓
-- All values in shared types must be converted to integer cents
+- `BasketSummary.Products.TotalPrice` in basket response: **float euros** (`14.0`) ✓
+- `purchase.products.price.amount` in checkout response: **integer cents** (`1400`) ✓
+- All values stored in shared types must be integer cents
 
 ---
 
@@ -297,50 +304,185 @@ Search the HTML for: `"cdn":{"restaurant":{"httpStatusCode":200`
 
 ---
 
-## BFF API ✓ (partial)
+## REST API ✓
 
 ```
-Base URL: https://cw-api.takeaway.com/api/v34
+Base URL: https://rest.api.eu-central-1.production.jet-external.com
 Headers:
-  Authorization: Bearer {bff_jwt}
+  Authorization: Bearer {access_token}   ← PKCE token, no exchange needed
   Accept: application/json, text/plain, */*
-  X-Requested-With: XMLHttpRequest
-  Origin: https://www.thuisbezorgd.nl
-```
-
-### Confirmed endpoints ✓
-
-```
-GET /user/stamp_cards
-→ {stampCards: [{stamps, voucher, restaurant: {id, logoUrl, name, slug}}], enabled}
-```
-
-Restaurant `id` here is alphanumeric (`RR5O1Q03`) — different from the numeric ID in SSR pages.
-
-### Basket / order endpoints ⚠️ (path patterns inferred — not yet captured)
-
-Confirmed from checkout URL: `basket=MzRlYjZhMWItOWNmYS00OD...-v1` (base64url UUID + `-v1`)
-Confirmed from checkout URL: `orderId=rvrhuugcleez2nxzm5ztza` (nanoid)
-
-```
-POST /baskets                    create basket (TBD)
-GET  /baskets/{basket_id}        get basket (TBD)
-POST /baskets/{basket_id}/items  add item (TBD)
-DELETE /baskets/{basket_id}      clear basket (TBD)
-POST /orders                     place order (TBD)
-GET  /orders/{order_id}          track order (TBD)
-GET  /orders                     order history (TBD)
+  Content-Type: application/json;v=1.0   (basket writes)
+  Content-Type: application/json;v=2     (checkout reads)
 ```
 
 ---
 
-## TODO — Phase 3 capture checklist
+## Basket — Create ✓
 
-Run mitmproxy, open menu page, **click "Add to cart"** on any item:
+```
+POST /basket
+Content-Type: application/json;v=1.0
 
-- [ ] Capture BFF token exchange (how PKCE access_token → BFF JWT)
-- [ ] Capture `POST /baskets` (create basket) — request + response shape
-- [ ] Capture basket item add — endpoint + item payload format
-- [ ] Capture `GET /baskets/{id}` — response shape
-- [ ] Capture `POST /orders` (place order) — full request body
-- [ ] Capture payment methods endpoint on `consumer.takeawaypay.com`
+{
+  "deals": [],
+  "products": [{
+    "date": "2026-03-22T22:06:04.032Z",
+    "productId": "e7589a25-2324-4c00-a5f1-47df09424471",
+    "quantity": 1,
+    "customerNotes": "",
+    "modifierGroups": [
+      {
+        "modifierGroupId": "7b425680-1793-4967-bf15-ea654880fa41",
+        "modifiers": [{"modifierId": "4ac7992d-28a9-492b-973a-32a794ac5960", "quantity": 1}]
+      }
+    ],
+    "dealGroups": []
+  }],
+  "orderDetails": {
+    "location": {
+      "zipCode": "2285 VL",
+      "geoLocation": {"latitude": 52.034, "longitude": 4.313}
+    }
+  },
+  "menuGroupId": "D38B48EBBC2CE1C817ABBD5155E1FD43",
+  "restaurantSeoName": "anatolian-flavors",
+  "serviceType": "delivery",
+  "consents": []
+}
+```
+
+**Response:**
+```json
+{
+  "BasketId": "MTczMDFlMzctZDFkNS00Ym-v1",
+  "Currency": "EUR",
+  "RestaurantSeoName": "anatolian-flavors",
+  "RestaurantId": "10571423",
+  "MenuGroupId": "D38B48EBBC2CE1C817ABBD5155E1FD43",
+  "ServiceType": "Delivery",
+  "BasketSummary": {
+    "Products": [{
+      "BasketProductIds": ["eac31a866efa9b30fcd6"],
+      "Name": "Kip döner pizza",
+      "Quantity": 1,
+      "TotalPrice": 14.0,
+      "UnitPrice": 14.0,
+      "ProductId": "e7589a25-2324-4c00-a5f1-47df09424471",
+      "ModifierGroups": [...]
+    }]
+  }
+}
+```
+
+`TotalPrice` / `UnitPrice` are **float euros** — multiply × 100 for cents.
+
+---
+
+## Basket — Add Item ✓
+
+```
+PUT /basket/{basketId}
+Content-Type: application/json;v=1.0
+
+{
+  "basketId": "MTczMDFlMzctZDFkNS00Ym-v1",
+  "deal": {"added": []},
+  "product": {
+    "added": [{
+      "date": "2026-03-22T22:06:21.566Z",
+      "productId": "9d9484ff-2abf-40e1-a8a8-037c849de74b",
+      "quantity": 1,
+      "customerNotes": "",
+      "modifierGroups": [...],
+      "dealGroups": []
+    }]
+  },
+  "orderDetails": {
+    "location": {
+      "zipCode": {"value": "2285 VL"},
+      "geoLocation": {"value": {"latitude": 52.034, "longitude": 4.313}}
+    }
+  },
+  "selectedServiceType": {"date": "2026-03-22T22:06:21.567Z", "value": "delivery"},
+  "consents": [],
+  "restaurantSeoName": "anatolian-flavors"
+}
+```
+
+**⚠️ `orderDetails.location` format differs from create:**
+- `POST /basket`: `zipCode` is a plain string
+- `PUT /basket/{id}`: `zipCode` is `{"value": "..."}`, `geoLocation` is `{"value": {...}}`
+
+Response shape same as basket create.
+
+---
+
+## Basket — Delete ✓ (inferred)
+
+```
+DELETE /basket/{basketId}
+```
+
+---
+
+## Checkout Summary ✓
+
+```
+GET /checkout/nl/{basketId}
+Content-Type: application/json;v=2
+```
+
+**Response (prices in integer cents):**
+```json
+{
+  "restaurant": {
+    "id": "10571423",
+    "name": "Anatolian Flavors",
+    "seoName": "anatolian-flavors",
+    "location": {
+      "address": {"lines": ["Kempstraat 141"], "locality": "Den Haag", "postalCode": "2572 GD"},
+      "geolocation": {"latitude": 52.064987, "longitude": 4.292233}
+    }
+  },
+  "purchase": {
+    "groups": [{
+      "products": [{
+        "id": "e7589a25-...",
+        "name": "Kip döner pizza",
+        "quantity": 1,
+        "price": {"amount": 1400, "formattedAmount": "€ 14,00"},
+        "options": [{"name": "Medium", "quantity": 1}]
+      }]
+    }]
+  }
+}
+```
+
+---
+
+## Account Endpoints ✓
+
+```
+GET /applications/international/consumer/me
+→ {Email, Name, PhoneNumber, ConsumerStatus, CreatedDate}
+
+GET /applications/international/consumer/me/address
+→ {
+    Addresses: [{AddressId, City, ZipCode, AddressName, Line1}],
+    DefaultAddress: 5659709812
+  }
+
+GET /consumers/nl/wallet
+→ {data: [...]}   (empty if no saved cards — iDeal/Apple Pay are session-only)
+```
+
+---
+
+## Order Placement
+
+Payment is handled by `pay.thuisbezorgd.nl` (Adyen). The `orderId` (nanoid,
+e.g. `cp2fzi7qducl02tfs0v70w`) is assigned by the payment service and returned
+in the checkout redirect URL. Full automated payment is out of scope.
+
+For `place_order`: create basket, return `{basketId, checkoutUrl}` for the user
+to complete payment in the browser.
