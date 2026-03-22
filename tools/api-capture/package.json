@@ -1,0 +1,16 @@
+{
+  "name": "@orderfood/api-capture",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "parse:ubereats": "tsx parse_captured.ts --input output/ubereats --output ../../docs/api-reference/ubereats.md",
+    "parse:thuisbezorgd": "tsx parse_captured.ts --input output/thuisbezorgd --output ../../docs/api-reference/thuisbezorgd.md"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0",
+    "tsx": "^4.10.0"
+  }
+}
