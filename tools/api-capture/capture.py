@@ -19,7 +19,10 @@ from mitmproxy import http
 
 PLATFORMS: dict[str, list[str]] = {
     "ubereats": ["ubereats.com"],
-    "thuisbezorgd": ["thuisbezorgd.nl", "thuisbezorgd.com"],
+    # thuisbezorgd.nl is the consumer web frontend (Next.js SSR, mostly HTML)
+    # cw-api.takeaway.com is the BFF that serves restaurant/menu/cart/order JSON
+    # consumer.takeawaypay.com handles JetPay payment profile APIs
+    "thuisbezorgd": ["thuisbezorgd.nl", "thuisbezorgd.com", "takeaway.com", "takeawaypay.com"],
 }
 
 _OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
