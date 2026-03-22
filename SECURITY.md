@@ -61,6 +61,37 @@ In scope for security reports:
 
 ---
 
+## Threat model
+
+### What this protects against
+
+- **Credential theft via filesystem read** — tokens are AES-256-GCM encrypted at rest. An attacker with read access to `~/.orderfood/` cannot use the tokens without also knowing the machine ID.
+- **Accidental credential exposure** — tokens are never logged, never appear in error messages, and are not included in MCP tool responses.
+- **Cross-machine token reuse** — the encryption key is derived from the local machine ID. Credentials copied to another machine cannot be decrypted.
+
+### What this does NOT protect against
+
+- **Compromised machine (root/admin access)** — an attacker with root access can read the machine ID and derive the key. Credentials are not safer than plaintext against this threat. Use OS keychain integration (see [ROADMAP.md](ROADMAP.md)) if this is a concern.
+- **Malicious MCP client** — the MCP server trusts all clients that connect to it over stdio. Any process that can connect to the server can invoke any tool, including `place_order`. Only connect orderfood to AI agents you trust, in environments you control.
+- **Compromised npm supply chain** — this project's dependencies are not audited for supply chain attacks beyond standard npm provenance. Review `pnpm-lock.yaml` before use in high-security environments.
+- **Platform session hijacking** — if a valid `jwt-session` / access token is stolen from memory or network, an attacker can use it directly against the platform APIs. This is a platform-level concern, not addressable here.
+
+### Trust boundary
+
+```
+AI Agent (Claude / Codex)
+    │  stdio
+    ▼
+MCP Server (orderfood)   ← trusts ALL connected clients
+    │  HTTPS
+    ▼
+Platform APIs (Uber Eats, Thuisbezorgd)
+```
+
+The MCP server has no authentication of its own. It is designed for single-user local use. Do not expose it over a network socket or share it between users.
+
+---
+
 ## Out of scope
 
 - Vulnerabilities in the Uber Eats or Thuisbezorgd platforms themselves — please report those directly to the respective companies via their own responsible disclosure programs
