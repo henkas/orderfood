@@ -148,3 +148,120 @@ export interface TBRestaurantCdnData {
   modifierGroups: TBModifierGroup[];
   modifierSets: TBModifierSet[];
 }
+
+export interface TBBasketModifier {
+  ModifierId?: string;
+  modifierId?: string;
+  Name?: string;
+  name?: string;
+  Quantity?: number;
+  quantity?: number;
+}
+
+export interface TBBasketModifierGroup {
+  ModifierGroupId?: string;
+  modifierGroupId?: string;
+  Name?: string;
+  name?: string;
+  Modifiers?: TBBasketModifier[];
+  modifiers?: TBBasketModifier[];
+}
+
+export interface TBBasketSummaryProduct {
+  BasketProductIds?: string[];
+  Name?: string;
+  name?: string;
+  Quantity?: number;
+  quantity?: number;
+  TotalPrice?: number;
+  totalPrice?: number;
+  UnitPrice?: number;
+  unitPrice?: number;
+  ProductId?: string;
+  productId?: string;
+  ModifierGroups?: TBBasketModifierGroup[];
+  modifierGroups?: TBBasketModifierGroup[];
+}
+
+export interface TBBasketResponse {
+  BasketId: string;
+  Currency?: string;
+  RestaurantSeoName?: string;
+  RestaurantId?: string;
+  MenuGroupId?: string;
+  ServiceType?: string;
+  BasketSummary?: {
+    Products?: TBBasketSummaryProduct[];
+  };
+}
+
+export interface TBCheckoutProductOption {
+  name: string;
+  quantity: number;
+}
+
+export interface TBCheckoutProduct {
+  id: string;
+  name: string;
+  quantity: number;
+  price: {
+    amount: number;
+    formattedAmount?: string;
+  };
+  options?: TBCheckoutProductOption[];
+}
+
+export interface TBCheckoutResponse {
+  restaurant: {
+    id: string;
+    name: string;
+    seoName: string;
+    location?: {
+      address?: {
+        lines?: string[];
+        locality?: string;
+        postalCode?: string;
+      };
+      geolocation?: {
+        latitude?: number;
+        longitude?: number;
+      };
+    };
+  };
+  purchase: {
+    groups: Array<{
+      products: TBCheckoutProduct[];
+    }>;
+  };
+}
+
+export interface TBSavedAddress {
+  AddressId: number | string;
+  City?: string;
+  ZipCode?: string;
+  AddressName?: string;
+  Line1?: string;
+}
+
+export interface TBSavedAddressesResponse {
+  Addresses: TBSavedAddress[];
+  DefaultAddress?: number | string;
+}
+
+export interface TBWalletPaymentMethod {
+  id?: string | number;
+  paymentMethodId?: string | number;
+  type?: string;
+  paymentMethodType?: string;
+  brand?: string;
+  label?: string;
+  name?: string;
+  maskedPan?: string;
+  lastFourDigits?: string;
+  isDefault?: boolean;
+  default?: boolean;
+}
+
+export interface TBWalletResponse {
+  data: TBWalletPaymentMethod[];
+}

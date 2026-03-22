@@ -9,8 +9,6 @@ import { NotFoundError } from '@orderfood/shared';
 export interface ThuisbezorgdCredentials {
   access_token: string;
   refresh_token: string;
-  bff_token: string;
-  bff_expires_at: number;
   expires_at: number;
   user_id: string;
 }
@@ -224,8 +222,6 @@ export async function completeEmailLogin(
   return {
     access_token: tokenJson.access_token,
     refresh_token: tokenJson.refresh_token,
-    bff_token: '',
-    bff_expires_at: 0,
     expires_at: Math.floor(Date.now() / 1000) + tokenJson.expires_in,
     user_id:
       readStringClaim(claims, 'user_id') ??
@@ -263,18 +259,6 @@ export async function refreshCredentials(
     refresh_token: tokenJson.refresh_token,
     expires_at: Math.floor(Date.now() / 1000) + tokenJson.expires_in,
   };
-}
-
-export async function ensureBffToken(
-  creds: ThuisbezorgdCredentials,
-): Promise<ThuisbezorgdCredentials> {
-  if (creds.bff_token && creds.bff_expires_at > Math.floor(Date.now() / 1000) + 60) {
-    return creds;
-  }
-  throw new NotFoundError(
-    'Thuisbezorgd BFF token exchange not yet captured',
-    'NOT_IMPLEMENTED',
-  );
 }
 
 async function authRequest(

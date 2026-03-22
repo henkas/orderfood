@@ -11,22 +11,53 @@ import type {
   RestaurantWithMenu,
   SearchParams,
 } from '@orderfood/shared';
-import { NotFoundError, PlatformError } from '@orderfood/shared';
 import {
+  AuthError,
+  NotFoundError,
+  PlatformError,
+  ValidationError,
+} from '@orderfood/shared';
+import {
+  loadCredentials,
+  refreshCredentials,
+  saveCredentials,
+  type ThuisbezorgdCredentials,
+} from './auth.js';
+import {
+  mapBasketSummary,
+  mapCheckoutCart,
   mapRestaurantMenu,
   mapRestaurantSummary,
+  mapSavedAddresses,
+  mapWalletPaymentMethods,
 } from './mappers.js';
 import type {
+  TBBasketResponse,
+  TBCheckoutResponse,
   TBListingPageState,
   TBRestaurantCdnData,
+  TBSavedAddressesResponse,
+  TBWalletResponse,
 } from './types.js';
 
 const BASE = 'https://www.thuisbezorgd.nl/en';
+const REST_BASE = 'https://rest.api.eu-central-1.production.jet-external.com';
 const BASKET_STUB_MESSAGE = 'basket endpoints not yet captured';
 
 export class ThuisbezorgdClient implements PlatformClient {
+  private credentials: ThuisbezorgdCredentials | null = null;
+  private basketId: string | null = null;
+  private lastSearchZipCode: string | null = null;
+  private lastSearchGeoLocation:
+    | { latitude: number; longitude: number }
+    | null = null;
+
   async searchRestaurants(params: SearchParams): Promise<Restaurant[]> {
     const listingPath = buildListingPath(params.location);
+    const postcode = extractZipCode(params.location);
+    if (postcode) {
+      this.lastSearchZipCode = postcode;
+    }
     const html = await fetchHtml(
       `${BASE}/delivery/food/${listingPath}?openOnWeb=true`,
     );
@@ -61,7 +92,12 @@ export class ThuisbezorgdClient implements PlatformClient {
   }
 
   async getCart(): Promise<Cart | null> {
-    throw basketStub();
+    if (!this.basketId) return null;
+    const checkout = await this.restGet<TBCheckoutResponse>(
+      `/checkout/nl/${this.basketId}`,
+      'application/json;v=2',
+    );
+    return mapCheckoutCart(checkout);
   }
 
   async addToCart(
@@ -70,29 +106,96 @@ export class ThuisbezorgdClient implements PlatformClient {
     quantity: number,
     options?: CartItemOption[],
   ): Promise<Cart> {
-    void restaurantId;
-    void itemId;
-    void quantity;
-    void options;
-    throw basketStub();
+    const html = await fetchHtml(`${BASE}/menu/${restaurantId}`);
+    const restaurant = parseMenuState(html);
+    const product = buildBasketProduct(restaurant, itemId, quantity, options ?? []);
+    const location = resolveOrderLocation(
+      restaurant,
+      this.lastSearchZipCode,
+      this.lastSearchGeoLocation,
+    );
+
+    if (!this.basketId) {
+      const basket = await this.restRequest<TBBasketResponse>(
+        '/basket',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            deals: [],
+            products: [product],
+            orderDetails: {
+              location: {
+                zipCode: location.zipCode,
+                geoLocation: location.geoLocation,
+              },
+            },
+            menuGroupId: product.menuGroupId,
+            restaurantSeoName: restaurant.restaurantInfo.seoName,
+            serviceType: 'delivery',
+            consents: [],
+          }),
+        },
+        'application/json;v=1.0',
+      );
+      this.basketId = basket.BasketId;
+      return mapBasketSummary(basket);
+    }
+
+    const basket = await this.restRequest<TBBasketResponse>(
+      `/basket/${this.basketId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          basketId: this.basketId,
+          deal: { added: [] },
+          product: { added: [product] },
+          orderDetails: {
+            location: {
+              zipCode: { value: location.zipCode },
+              geoLocation: { value: location.geoLocation },
+            },
+          },
+          selectedServiceType: {
+            date: new Date().toISOString(),
+            value: 'delivery',
+          },
+          consents: [],
+          restaurantSeoName: restaurant.restaurantInfo.seoName,
+        }),
+      },
+      'application/json;v=1.0',
+    );
+    this.basketId = basket.BasketId;
+    return mapBasketSummary(basket);
   }
 
   async clearCart(): Promise<void> {
-    throw basketStub();
+    if (!this.basketId) return;
+    await this.restRequest(`/basket/${this.basketId}`, {
+      method: 'DELETE',
+    });
+    this.basketId = null;
   }
 
   async getSavedAddresses(): Promise<Address[]> {
-    throw basketStub();
+    const response = await this.restGet<TBSavedAddressesResponse>(
+      '/applications/international/consumer/me/address',
+    );
+    return mapSavedAddresses(response);
   }
 
   async getPaymentMethods(): Promise<PaymentMethod[]> {
-    throw basketStub();
+    const response = await this.restGet<TBWalletResponse>('/consumers/nl/wallet');
+    return mapWalletPaymentMethods(response);
   }
 
   async placeOrder(addressId: string, paymentMethodId: string): Promise<Order> {
     void addressId;
     void paymentMethodId;
-    throw basketStub();
+    throw new ValidationError(
+      'Thuisbezorgd payment is completed in the browser via Adyen. Finish checkout manually in the browser.',
+      'PAYMENT_IN_BROWSER',
+    );
   }
 
   async trackOrder(
@@ -110,6 +213,72 @@ export class ThuisbezorgdClient implements PlatformClient {
   async cancelOrder(orderId: string): Promise<void> {
     void orderId;
     throw basketStub();
+  }
+
+  private async getCreds(): Promise<ThuisbezorgdCredentials> {
+    if (!this.credentials) {
+      try {
+        this.credentials = await loadCredentials();
+      } catch {
+        throw new AuthError(
+          'Thuisbezorgd credentials not found. Run: npx orderfood setup --platform thuisbezorgd',
+          'AUTH_MISSING',
+        );
+      }
+    }
+    if (this.credentials.expires_at <= Math.floor(Date.now() / 1000) + 60) {
+      this.credentials = await refreshCredentials(this.credentials);
+      await saveCredentials(this.credentials);
+    }
+    return this.credentials;
+  }
+
+  private async restGet<T>(
+    path: string,
+    contentType = 'application/json',
+  ): Promise<T> {
+    return this.restRequest<T>(path, { method: 'GET' }, contentType);
+  }
+
+  private async restRequest<T = void>(
+    path: string,
+    init: {
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+      body?: string;
+    },
+    contentType = 'application/json',
+  ): Promise<T> {
+    const creds = await this.getCreds();
+    const res = await fetch(`${REST_BASE}${path}`, {
+      method: init.method,
+      headers: {
+        authorization: `Bearer ${creds.access_token}`,
+        accept: 'application/json, text/plain, */*',
+        'content-type': contentType,
+      },
+      body: init.body,
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      throw new AuthError(
+        'Thuisbezorgd access token expired. Re-run: npx orderfood setup --platform thuisbezorgd',
+        'AUTH_EXPIRED',
+      );
+    }
+    if (res.status === 404) {
+      throw new NotFoundError(`Thuisbezorgd resource not found: ${path}`, 'NOT_FOUND');
+    }
+    if (!res.ok) {
+      throw new PlatformError(
+        `Thuisbezorgd REST request failed: ${res.status}`,
+        'HTTP_ERROR',
+        res.status,
+      );
+    }
+    if (res.status === 204) {
+      return undefined as T;
+    }
+    return (await res.json()) as T;
   }
 }
 
@@ -233,6 +402,13 @@ function buildListingPath(location: string): string {
   return city ? `${city}-${postcode}` : postcode;
 }
 
+function extractZipCode(location: string): string | null {
+  const postcodeMatch = location.match(/\b\d{4}\s?[A-Za-z]{2}\b/);
+  if (!postcodeMatch) return null;
+  const normalized = postcodeMatch[0].replace(/\s+/g, '').toUpperCase();
+  return `${normalized.slice(0, 4)} ${normalized.slice(4)}`;
+}
+
 function slugify(input: string): string {
   return input
     .trim()
@@ -263,4 +439,65 @@ function sortRestaurants(
 
 function basketStub(): NotFoundError {
   return new NotFoundError(BASKET_STUB_MESSAGE, 'NOT_IMPLEMENTED');
+}
+
+function buildBasketProduct(
+  restaurant: TBRestaurantCdnData,
+  itemId: string,
+  quantity: number,
+  options: CartItemOption[],
+) {
+  const item = restaurant.items[itemId];
+  const variation = item?.variations?.[0];
+  if (!item || !variation || !variation.menuGroupIds?.[0]) {
+    throw new NotFoundError(
+      `Item ${itemId} not found in Thuisbezorgd restaurant ${restaurant.restaurantInfo.seoName}`,
+      'ITEM_NOT_FOUND',
+    );
+  }
+
+  const groupedOptions = new Map<string, string[]>();
+  for (const option of options) {
+    const entries = groupedOptions.get(option.group_id) ?? [];
+    entries.push(option.option_id);
+    groupedOptions.set(option.group_id, entries);
+  }
+
+  return {
+    date: new Date().toISOString(),
+    productId: variation.id,
+    quantity,
+    customerNotes: '',
+    modifierGroups: [...groupedOptions.entries()].map(([groupId, modifierIds]) => ({
+      modifierGroupId: groupId,
+      modifiers: modifierIds.map((modifierId) => ({
+        modifierId,
+        quantity: 1,
+      })),
+    })),
+    dealGroups: [],
+    menuGroupId: variation.menuGroupIds[0],
+  };
+}
+
+function resolveOrderLocation(
+  restaurant: TBRestaurantCdnData,
+  cachedZipCode: string | null,
+  cachedGeoLocation: { latitude: number; longitude: number } | null,
+) {
+  const restaurantLocation = restaurant.restaurantInfo.location;
+  const zipCode = cachedZipCode ?? restaurantLocation?.postCode;
+  const geoLocation = cachedGeoLocation ?? {
+    latitude: restaurantLocation?.latitude ?? 0,
+    longitude: restaurantLocation?.longitude ?? 0,
+  };
+
+  if (!zipCode) {
+    throw new ValidationError(
+      'A delivery postcode is required before adding items to a Thuisbezorgd basket.',
+      'ZIP_REQUIRED',
+    );
+  }
+
+  return { zipCode, geoLocation };
 }

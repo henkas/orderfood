@@ -1,11 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import {
+  mapCheckoutCart,
   mapRestaurantSummary,
   mapRestaurantMenu,
+  mapSavedAddresses,
+  mapWalletPaymentMethods,
 } from '../src/mappers.js';
 import type {
+  TBCheckoutResponse,
   TBListingRestaurant,
   TBRestaurantCdnData,
+  TBSavedAddressesResponse,
+  TBWalletResponse,
 } from '../src/types.js';
 
 const listingRestaurant: TBListingRestaurant = {
@@ -168,6 +174,74 @@ const menuRestaurant: TBRestaurantCdnData = {
   ],
 };
 
+const checkoutResponse: TBCheckoutResponse = {
+  restaurant: {
+    id: '10571423',
+    name: 'Anatolian Flavors',
+    seoName: 'anatolian-flavors',
+    location: {
+      address: {
+        lines: ['Kempstraat 141'],
+        locality: 'Den Haag',
+        postalCode: '2572 GD',
+      },
+      geolocation: {
+        latitude: 52.064987,
+        longitude: 4.292233,
+      },
+    },
+  },
+  purchase: {
+    groups: [
+      {
+        products: [
+          {
+            id: 'e7589a25-product',
+            name: 'Kip döner pizza',
+            quantity: 1,
+            price: {
+              amount: 1400,
+              formattedAmount: '€ 14,00',
+            },
+            options: [{ name: 'Medium', quantity: 1 }],
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const savedAddresses: TBSavedAddressesResponse = {
+  Addresses: [
+    {
+      AddressId: 5659709812,
+      City: 'Den Haag',
+      ZipCode: '2572 GD',
+      AddressName: 'Home',
+      Line1: 'Kempstraat 141',
+    },
+  ],
+  DefaultAddress: 5659709812,
+};
+
+const walletResponse: TBWalletResponse = {
+  data: [
+    {
+      id: 'wallet-card-1',
+      paymentMethodType: 'Card',
+      brand: 'Visa',
+      lastFourDigits: '4242',
+      isDefault: true,
+    },
+    {
+      id: 'wallet-ideal-1',
+      paymentMethodType: 'iDEAL',
+      label: 'iDEAL',
+      isDefault: false,
+    },
+  ],
+};
+
 describe('mapRestaurantSummary', () => {
   it('maps SSR listing restaurant data to Restaurant', () => {
     const restaurant = mapRestaurantSummary(listingRestaurant);
@@ -190,5 +264,35 @@ describe('mapRestaurantMenu', () => {
     expect(restaurant.categories[0].items[0].option_groups).toHaveLength(2);
     expect(restaurant.categories[0].items[0].option_groups[0].options[0].price_delta).toBe(250);
     expect(restaurant.categories[0].items[0].option_groups[1].options[0].price_delta).toBe(300);
+  });
+});
+
+describe('mapCheckoutCart', () => {
+  it('maps checkout products priced in cents to Cart', () => {
+    const cart = mapCheckoutCart(checkoutResponse);
+    expect(cart.restaurant_id).toBe('anatolian-flavors');
+    expect(cart.items).toHaveLength(1);
+    expect(cart.items[0].unit_price).toBe(1400);
+    expect(cart.total).toBe(1400);
+  });
+});
+
+describe('mapSavedAddresses', () => {
+  it('maps saved addresses to shared Address type', () => {
+    const addresses = mapSavedAddresses(savedAddresses);
+    expect(addresses).toHaveLength(1);
+    expect(addresses[0].id).toBe('5659709812');
+    expect(addresses[0].label).toBe('Home');
+    expect(addresses[0].formatted).toContain('Kempstraat 141');
+  });
+});
+
+describe('mapWalletPaymentMethods', () => {
+  it('maps wallet entries to shared PaymentMethod type', () => {
+    const methods = mapWalletPaymentMethods(walletResponse);
+    expect(methods).toHaveLength(2);
+    expect(methods[0].type).toBe('card');
+    expect(methods[0].is_default).toBe(true);
+    expect(methods[1].type).toBe('ideal');
   });
 });

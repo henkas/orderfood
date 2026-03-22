@@ -300,11 +300,25 @@ export class UberEatsClient implements PlatformClient {
       paymentProfileSelectionSource: 'USER',
     });
 
-    // TODO: submitDraftOrderV2 endpoint was NOT captured — needs a second capture session
-    // where the user presses "Place Order". Current implementation throws with a clear message.
+    // The confirmed order placement endpoint is:
+    //   POST /_p/api/checkoutOrdersByDraftOrdersV1?localeCode=nl-en
+    //
+    // The request body requires `checkoutActionResultParams.value` — a serialized JSON blob
+    // produced by the browser-hosted payment provider flow at payments.ubereats.com.
+    // This flow initiates an Apple Pay sheet or iDeal redirect that requires browser-level
+    // payment APIs (PKPaymentRequest / iDeal hosted page).  There is no way to programmatically
+    // complete this step without a browser with access to the payment provider session.
+    //
+    // To unblock this, the caller would need to:
+    //   1. Load payments.ubereats.com/getPreCheckoutActions in a headless browser
+    //   2. Complete the Apple Pay or iDeal step and capture the redirect result
+    //   3. Pass the resulting `checkoutActionResultParams` blob here
+    //
+    // See docs/api-reference/ubereats.md § checkoutOrdersByDraftOrdersV1 for the full shape.
     throw new PlatformError(
-      'place_order not yet implemented: submitDraftOrderV2 endpoint needs a second capture session. ' +
-      'Browse to checkout in the Uber Eats web app while mitmproxy is running and press "Place Order".',
+      'place_order requires completing the payments.ubereats.com browser payment flow ' +
+      '(Apple Pay or iDeal) to generate checkoutActionResultParams. ' +
+      'This cannot be automated without a headless browser integration.',
       'NOT_IMPLEMENTED',
     );
   }
