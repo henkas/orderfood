@@ -1,3 +1,6 @@
 packages:
   - 'packages/*'
   - 'tools/api-capture'
+onlyBuiltDependencies:
+  - esbuild
+  - node-machine-id

@@ -1,6 +1,6 @@
 {
   "name": "@henkas/orderfood",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for AI-driven food delivery on Uber Eats and Thuisbezorgd",
   "type": "module",
   "license": "MIT",
@@ -15,26 +15,28 @@
     "orderfood": "./dist/setup.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit && node build.mjs",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@orderfood/shared": "workspace:*",
-    "@orderfood/ubereats-client": "workspace:*",
     "@orderfood/thuisbezorgd-client": "workspace:*",
+    "@orderfood/ubereats-client": "workspace:*",
     "node-machine-id": "^1.1.12",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "esbuild": "^0.27.4",
     "typescript": "^5.4.5"
   }
 }

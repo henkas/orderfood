@@ -86,10 +86,20 @@ npx orderfood setup --platform thuisbezorgd
 
 ## Usage with Claude Code
 
-Register the MCP server:
+```bash
+claude mcp add orderfood -- npx @henkas/orderfood
+```
+
+Or if running from source:
 
 ```bash
 claude mcp add orderfood -- node /path/to/orderfood/packages/mcp-server/dist/index.js
+```
+
+## Usage with Codex
+
+```bash
+codex mcp add orderfood -- npx @henkas/orderfood
 ```
 
 Then talk to Claude:
