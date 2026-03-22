@@ -75,14 +75,12 @@ pnpm build
 
 ## Setup
 
-Credentials are stored encrypted at `~/.orderfood/{platform}.json` using AES-256-GCM.
-
-Run the setup CLI once per platform. It will prompt for your session token (obtained by logging in via the app while mitmproxy is running, or by copying it from browser devtools):
-
 ```bash
-npx orderfood setup --platform ubereats
-npx orderfood setup --platform thuisbezorgd
+npx @henkas/orderfood setup --platform ubereats
+npx @henkas/orderfood setup --platform thuisbezorgd
 ```
+
+Credentials are stored encrypted at `~/.orderfood/` (AES-256-GCM). See the [Setup Guide](docs/setup.md) for full step-by-step instructions including where to find the Uber Eats cookies and how the Thuisbezorgd OAuth flow works.
 
 ## Usage with Claude Code
 
@@ -139,6 +137,14 @@ Platform client code is based on mitmproxy captures of the real apps. To contrib
 3. `mitmproxy -s tools/api-capture/capture.py`
 4. Use the app — captured calls land in `tools/api-capture/output/{platform}/`
 5. Document findings in `docs/api-reference/{platform}.md`
+
+## Documentation
+
+| | |
+|---|---|
+| [Setup Guide](docs/setup.md) | Install, authenticate, connect to your agent |
+| [Uber Eats API Reference](docs/api-reference/ubereats.md) | Discovered endpoints and request shapes |
+| [Thuisbezorgd API Reference](docs/api-reference/thuisbezorgd.md) | Discovered endpoints and request shapes |
 
 ## Contributing
 
