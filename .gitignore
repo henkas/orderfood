@@ -4,3 +4,5 @@ dist/
 tools/api-capture/output/
 tools/api-capture/.venv/
 .env
+__pycache__/
+*.pyc
