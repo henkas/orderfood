@@ -120,15 +120,15 @@ Look for: `"restaurantList":{"filteredRestaurantIds":[...]` and `"restaurants":{
 
 ```json
 {
-  "id": "10385916",
-  "name": "Thunderbuns | Smash Burgers | Rijswijk",
-  "uniqueName": "thunderbuns-smashburgers-rijswijk",
-  "brandName": "Thunderbuns",
+  "id": "12345678",
+  "name": "Pasta Palace | Amsterdam",
+  "uniqueName": "pasta-palace-amsterdam",
+  "brandName": "Pasta Palace",
   "address": {
-    "city": "Rijswijk",
-    "firstLine": "Dr. Colijnlaan 323",
-    "postalCode": "2283XL",
-    "location": {"type": "Point", "coordinates": [4.321394, 52.04085]}
+    "city": "Amsterdam",
+    "firstLine": "Voorbeeldstraat 1",
+    "postalCode": "1012 AB",
+    "location": {"type": "Point", "coordinates": [4.895, 52.370]}
   },
   "rating": {"count": 203, "starRating": 4},
   "isNew": false,
@@ -173,19 +173,19 @@ Search the HTML for: `"cdn":{"restaurant":{"httpStatusCode":200`
 
 ```json
 {
-  "restaurantId": "10385916",
+  "restaurantId": "12345678",
   "restaurantInfo": {
-    "name": "Thunderbuns | Smash Burgers | Rijswijk",
-    "seoName": "thunderbuns-smashburgers-rijswijk",
+    "name": "Pasta Palace | Amsterdam",
+    "seoName": "pasta-palace-amsterdam",
     "description": "",
     "logoUrl": "https://res.cloudinary.com/...",
     "bannerUrl": "https://res.cloudinary.com/...",
     "location": {
-      "address": "Dr. Colijnlaan 323",
-      "postCode": "2283XL",
-      "city": "Rijswijk",
-      "latitude": 52.04085,
-      "longitude": 4.321394
+      "address": "Voorbeeldstraat 1",
+      "postCode": "1012 AB",
+      "city": "Amsterdam",
+      "latitude": 52.370,
+      "longitude": 4.895
     },
     "cuisineTypes": [
       {"id": "78", "name": "Burgers", "seoName": "burger", "language": "en"}
@@ -340,12 +340,12 @@ Content-Type: application/json;v=1.0
   }],
   "orderDetails": {
     "location": {
-      "zipCode": "2285 VL",
-      "geoLocation": {"latitude": 52.034, "longitude": 4.313}
+      "zipCode": "1234 AB",
+      "geoLocation": {"latitude": 52.370, "longitude": 4.895}
     }
   },
   "menuGroupId": "D38B48EBBC2CE1C817ABBD5155E1FD43",
-  "restaurantSeoName": "anatolian-flavors",
+  "restaurantSeoName": "burger-joint",
   "serviceType": "delivery",
   "consents": []
 }
@@ -356,14 +356,14 @@ Content-Type: application/json;v=1.0
 {
   "BasketId": "MTczMDFlMzctZDFkNS00Ym-v1",
   "Currency": "EUR",
-  "RestaurantSeoName": "anatolian-flavors",
-  "RestaurantId": "10571423",
+  "RestaurantSeoName": "burger-joint",
+  "RestaurantId": "98765432",
   "MenuGroupId": "D38B48EBBC2CE1C817ABBD5155E1FD43",
   "ServiceType": "Delivery",
   "BasketSummary": {
     "Products": [{
       "BasketProductIds": ["eac31a866efa9b30fcd6"],
-      "Name": "Kip döner pizza",
+      "Name": "Classic Burger",
       "Quantity": 1,
       "TotalPrice": 14.0,
       "UnitPrice": 14.0,
@@ -399,13 +399,13 @@ Content-Type: application/json;v=1.0
   },
   "orderDetails": {
     "location": {
-      "zipCode": {"value": "2285 VL"},
-      "geoLocation": {"value": {"latitude": 52.034, "longitude": 4.313}}
+      "zipCode": {"value": "1234 AB"},
+      "geoLocation": {"value": {"latitude": 52.370, "longitude": 4.895}}
     }
   },
   "selectedServiceType": {"date": "2026-03-22T22:06:21.567Z", "value": "delivery"},
   "consents": [],
-  "restaurantSeoName": "anatolian-flavors"
+  "restaurantSeoName": "burger-joint"
 }
 ```
 
@@ -436,9 +436,9 @@ Content-Type: application/json;v=2
 ```json
 {
   "restaurant": {
-    "id": "10571423",
-    "name": "Anatolian Flavors",
-    "seoName": "anatolian-flavors",
+    "id": "98765432",
+    "name": "Burger Joint",
+    "seoName": "burger-joint",
     "location": {
       "address": {"lines": ["Kempstraat 141"], "locality": "Den Haag", "postalCode": "2572 GD"},
       "geolocation": {"latitude": 52.064987, "longitude": 4.292233}
@@ -448,7 +448,7 @@ Content-Type: application/json;v=2
     "groups": [{
       "products": [{
         "id": "e7589a25-...",
-        "name": "Kip döner pizza",
+        "name": "Classic Burger",
         "quantity": 1,
         "price": {"amount": 1400, "formattedAmount": "€ 14,00"},
         "options": [{"name": "Medium", "quantity": 1}]

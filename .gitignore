@@ -6,3 +6,16 @@ tools/api-capture/.venv/
 .env
 __pycache__/
 *.pyc
+
+# Raw API capture session directories (may contain PII from live sessions)
+capture
+capture2
+thuis
+thuisbezorgdcapture
+ubercapture
+
+# HAR exports from browser devtools
+*.har
+
+# macOS
+.DS_Store

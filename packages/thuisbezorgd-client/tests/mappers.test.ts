@@ -15,17 +15,17 @@ import type {
 } from '../src/types.js';
 
 const listingRestaurant: TBListingRestaurant = {
-  id: '10385916',
-  name: 'Thunderbuns | Smash Burgers | Rijswijk',
-  uniqueName: 'thunderbuns-smashburgers-rijswijk',
-  brandName: 'Thunderbuns',
+  id: '12345678',
+  name: 'Pasta Palace | Amsterdam',
+  uniqueName: 'pasta-palace-amsterdam',
+  brandName: 'Pasta Palace',
   address: {
-    city: 'Rijswijk',
-    firstLine: 'Dr. Colijnlaan 323',
-    postalCode: '2283XL',
+    city: 'Amsterdam',
+    firstLine: 'Voorbeeldstraat 1',
+    postalCode: '1012 AB',
     location: {
       type: 'Point',
-      coordinates: [4.321394, 52.04085],
+      coordinates: [4.895, 52.370],
     },
   },
   rating: {
@@ -58,19 +58,19 @@ const listingRestaurant: TBListingRestaurant = {
 
 const menuRestaurant: TBRestaurantCdnData = {
   httpStatusCode: 200,
-  restaurantId: '10385916',
+  restaurantId: '12345678',
   restaurantInfo: {
-    name: 'Thunderbuns | Smash Burgers | Rijswijk',
-    seoName: 'thunderbuns-smashburgers-rijswijk',
+    name: 'Pasta Palace | Amsterdam',
+    seoName: 'pasta-palace-amsterdam',
     description: '',
     logoUrl: 'https://res.cloudinary.com/example/logo.png',
     bannerUrl: 'https://res.cloudinary.com/example/banner.png',
     location: {
-      address: 'Dr. Colijnlaan 323',
-      postCode: '2283XL',
-      city: 'Rijswijk',
-      latitude: 52.04085,
-      longitude: 4.321394,
+      address: 'Voorbeeldstraat 1',
+      postCode: '1012 AB',
+      city: 'Amsterdam',
+      latitude: 52.370,
+      longitude: 4.895,
     },
     cuisineTypes: [
       {
@@ -176,9 +176,9 @@ const menuRestaurant: TBRestaurantCdnData = {
 
 const checkoutResponse: TBCheckoutResponse = {
   restaurant: {
-    id: '10571423',
-    name: 'Anatolian Flavors',
-    seoName: 'anatolian-flavors',
+    id: '98765432',
+    name: 'Burger Joint',
+    seoName: 'burger-joint',
     location: {
       address: {
         lines: ['Kempstraat 141'],
@@ -197,7 +197,7 @@ const checkoutResponse: TBCheckoutResponse = {
         products: [
           {
             id: 'e7589a25-product',
-            name: 'Kip döner pizza',
+            name: 'Classic Burger',
             quantity: 1,
             price: {
               amount: 1400,
@@ -245,7 +245,7 @@ const walletResponse: TBWalletResponse = {
 describe('mapRestaurantSummary', () => {
   it('maps SSR listing restaurant data to Restaurant', () => {
     const restaurant = mapRestaurantSummary(listingRestaurant);
-    expect(restaurant.id).toBe('thunderbuns-smashburgers-rijswijk');
+    expect(restaurant.id).toBe('pasta-palace-amsterdam');
     expect(restaurant.platform).toBe('thuisbezorgd');
     expect(restaurant.delivery_fee).toBe(299);
     expect(restaurant.min_order).toBe(1000);
@@ -257,7 +257,7 @@ describe('mapRestaurantSummary', () => {
 describe('mapRestaurantMenu', () => {
   it('maps SSR menu state to RestaurantWithMenu with modifiers', () => {
     const restaurant = mapRestaurantMenu(menuRestaurant);
-    expect(restaurant.id).toBe('thunderbuns-smashburgers-rijswijk');
+    expect(restaurant.id).toBe('pasta-palace-amsterdam');
     expect(restaurant.categories).toHaveLength(1);
     expect(restaurant.categories[0].items).toHaveLength(1);
     expect(restaurant.categories[0].items[0].price).toBe(1245);
@@ -270,7 +270,7 @@ describe('mapRestaurantMenu', () => {
 describe('mapCheckoutCart', () => {
   it('maps checkout products priced in cents to Cart', () => {
     const cart = mapCheckoutCart(checkoutResponse);
-    expect(cart.restaurant_id).toBe('anatolian-flavors');
+    expect(cart.restaurant_id).toBe('burger-joint');
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].unit_price).toBe(1400);
     expect(cart.total).toBe(1400);
