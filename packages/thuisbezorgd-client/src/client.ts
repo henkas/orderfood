@@ -410,12 +410,15 @@ function extractZipCode(location: string): string | null {
 }
 
 function slugify(input: string): string {
+  // split on the separator then filter empty segments — avoids any trailing/leading
+  // hyphen trimming regex that CodeQL flags as polynomial-ReDoS vulnerable
   return input
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .split('-')
+    .filter(Boolean)
+    .join('-');
 }
 
 function sortRestaurants(
