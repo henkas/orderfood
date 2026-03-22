@@ -1,9 +1,24 @@
 {
-  "name": "@orderfood/mcp-server",
+  "name": "@henkas/orderfood",
   "version": "0.1.0",
+  "description": "MCP server for AI-driven food delivery on Uber Eats and Thuisbezorgd",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/henkas/orderfood.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "orderfood": "./dist/setup.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc",

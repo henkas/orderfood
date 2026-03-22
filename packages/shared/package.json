@@ -1,7 +1,17 @@
 {
   "name": "@orderfood/shared",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Shared types, errors, and PlatformClient interface for OrderFood MCP",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/henkas/orderfood.git",
+    "directory": "packages/shared"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -10,6 +20,9 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -18,5 +31,6 @@
   "devDependencies": {
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
-  }
+  },
+  "private": true
 }

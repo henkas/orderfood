@@ -1,9 +1,32 @@
 {
   "name": "@orderfood/ubereats-client",
   "version": "0.1.0",
+  "description": "Uber Eats platform client for OrderFood MCP",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/henkas/orderfood.git",
+    "directory": "packages/ubereats-client"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/client.js",
   "types": "./dist/client.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/auth.js",
+      "types": "./dist/auth.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -18,5 +41,6 @@
     "@types/node": "^20.14.0",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
-  }
+  },
+  "private": true
 }

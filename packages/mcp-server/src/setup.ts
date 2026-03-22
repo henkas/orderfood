@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createInterface } from 'node:readline';
-import { saveCredentials } from '@orderfood/ubereats-client/dist/auth.js';
+import { saveCredentials } from '@orderfood/ubereats-client/auth';
 
 const args = process.argv.slice(2);
 const platformIdx = args.indexOf('--platform');
