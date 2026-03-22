@@ -10,6 +10,8 @@ jobs:
   ci:
     name: Build · Typecheck · Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
