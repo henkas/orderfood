@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    name: Typecheck · Test · Build
+    name: Build · Typecheck · Test
     runs-on: ubuntu-latest
 
     steps:
@@ -26,11 +26,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm build
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Test
         run: pnpm test
-
-      - name: Build
-        run: pnpm build
