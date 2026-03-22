@@ -18,6 +18,27 @@ importers:
         specifier: ^1.6.0
         version: 1.6.1
 
+  packages/shared:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1
+
+  tools/api-capture:
+    devDependencies:
+      tsx:
+        specifier: ^4.10.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
