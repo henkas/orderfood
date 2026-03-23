@@ -1,7 +1,8 @@
 # Uber Eats API Reference
 
-Discovered via mitmproxy capture of the Uber Eats web app (nl-en locale).
-All example values are synthetic — no real credentials, addresses, or account UUIDs appear here.
+> **Last verified:** 2026-03-22 (mitmproxy capture, web app nl-en locale, Node.js client)
+> All example values are synthetic — no real credentials, addresses, or account UUIDs appear here.
+> If an endpoint returns unexpected errors, re-run a mitmproxy capture and compare against this reference.
 
 **Base URL:** `https://www.ubereats.com/_p/api`
 **Locale query param:** `?localeCode=nl-en` (append to every endpoint)

@@ -1,9 +1,10 @@
 # Thuisbezorgd API Reference
 
-> **Phase 3 capture complete** — all confirmed. Auth, restaurant listing, menu,
-> basket create/update, checkout summary, addresses, and payment methods all
-> captured via HAR export. Order placement (payment step) handled by Adyen on
-> `pay.thuisbezorgd.nl` — out of scope for automated flow.
+> **Last verified:** 2026-03-22 (HAR export + mitmproxy capture, web app nl-en locale)
+> All example values are synthetic — no real credentials, addresses, or account UUIDs appear here.
+> If an endpoint returns unexpected errors, re-run a capture session and compare against this reference.
+
+**Phase 3 capture complete** — auth, restaurant listing, menu, basket create/update, checkout summary, addresses, and payment methods all confirmed. Order placement (payment step) handled by Adyen on `pay.thuisbezorgd.nl` — out of scope for automated flow.
 
 ---
 
