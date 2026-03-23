@@ -65,16 +65,17 @@ In scope for security reports:
 
 ### What this protects against
 
-- **Credential theft via filesystem read** — tokens are AES-256-GCM encrypted at rest. An attacker with read access to `~/.orderfood/` cannot use the tokens without also knowing the machine ID.
+- **Credential theft via filesystem read** — tokens are AES-256-GCM encrypted at rest. An attacker who copies `~/.orderfood/` to a different machine cannot decrypt the tokens, because the key is bound to the original machine ID. An attacker already on the same machine may be able to read the machine ID from system interfaces (e.g., `ioreg` on macOS) and derive the key — see "Compromised machine" below.
 - **Accidental credential exposure** — tokens are never logged, never appear in error messages, and are not included in MCP tool responses.
 - **Cross-machine token reuse** — the encryption key is derived from the local machine ID. Credentials copied to another machine cannot be decrypted.
 
 ### What this does NOT protect against
 
-- **Compromised machine (root/admin access)** — an attacker with root access can read the machine ID and derive the key. Credentials are not safer than plaintext against this threat. Use OS keychain integration (see [ROADMAP.md](ROADMAP.md)) if this is a concern.
-- **Malicious MCP client** — the MCP server trusts all clients that connect to it over stdio. Any process that can connect to the server can invoke any tool, including `place_order`. Only connect orderfood to AI agents you trust, in environments you control.
+- **Local user access** — the machine ID is readable by any local user on macOS (`ioreg`) and Linux (`/etc/machine-id`). A local attacker (not just root) may be able to derive the encryption key and decrypt stored tokens. Use OS keychain integration (see [ROADMAP.md](ROADMAP.md)) if this is a concern.
+- **Malicious process with server control** — the MCP server runs as a child process; whoever spawns it controls its stdin/stdout pipe and can invoke any tool, including `place_order`. There is no authentication on the stdio transport. Only run orderfood inside agents and environments you control.
 - **Compromised npm supply chain** — this project's dependencies are not audited for supply chain attacks beyond standard npm provenance. Review `pnpm-lock.yaml` before use in high-security environments.
 - **Platform session hijacking** — if a valid `jwt-session` / access token is stolen from memory or network, an attacker can use it directly against the platform APIs. This is a platform-level concern, not addressable here.
+- **In-process token exposure** — decrypted tokens are held in the Node.js process heap during every tool call. A local attacker with access to process memory (debugger, crash dump) can extract plaintext tokens without touching `~/.orderfood/`. This is inherent to any in-process credential use and is not addressed by the on-disk encryption.
 
 ### Trust boundary
 
