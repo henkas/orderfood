@@ -37,6 +37,7 @@ MCP server that lets AI agents search restaurants and place food delivery orders
 | `track_order` | Get live order status |
 | `get_order_history` | List past orders |
 | `cancel_order` | Cancel an active order |
+| `ping_platform` | Check auth + connectivity for a platform |
 
 All tools accept `platform: "ubereats" | "thuisbezorgd"` as a required parameter.
 
@@ -53,7 +54,7 @@ All tools accept `platform: "ubereats" | "thuisbezorgd"` as a required parameter
 | Track order | ✅ | 🚧 | TB tracking endpoint not yet captured |
 | Order history | 🚧 | 🚧 | UE: endpoint returns null — correct request params unknown; TB: not yet captured |
 | Cancel order | 🚧 | 🚧 | Endpoint not yet captured |
-| Health check | 🚧 | 🚧 | `ping_platform` tool planned — not yet implemented |
+| Health check | ✅ | ✅ | `ping_platform` tool verifies auth + connectivity |
 
 **Legend:** ✅ working · ⚠️ blocked by external dependency · 🚧 stub (API not yet captured) · — not applicable
 
