@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { AuthError } from '@orderfood/shared';
+import { AuthError, RateLimitError } from '@orderfood/shared';
 import { getClient } from '../config.js';
 
 const platformSchema = z.enum(['ubereats', 'thuisbezorgd']);
@@ -10,7 +10,7 @@ export function registerHealthTools(server: McpServer): void {
     'ping_platform',
     'Check whether a platform is reachable and credentials are valid. Returns { platform, status, latency_ms }. ' +
     'Call this when you receive auth or network errors to diagnose the issue before retrying a complex flow. ' +
-    'status values: "ok" | "auth_error" | "error"',
+    'status values: "ok" | "auth_error" | "rate_limited" | "error"',
     { platform: platformSchema },
     async ({ platform }) => {
       const start = Date.now();
@@ -39,7 +39,22 @@ export function registerHealthTools(server: McpServer): void {
             isError: true,
           };
         }
-        const err = e as { message?: string };
+        if (e instanceof RateLimitError) {
+          return {
+            content: [{
+              type: 'text' as const,
+              text: JSON.stringify({
+                platform,
+                status: 'rate_limited',
+                message: e.message,
+                retry_after: e.retry_after,
+                latency_ms,
+              }),
+            }],
+            isError: true,
+          };
+        }
+        const err = e as { message?: string; code?: string };
         return {
           content: [{
             type: 'text' as const,
@@ -47,6 +62,7 @@ export function registerHealthTools(server: McpServer): void {
               platform,
               status: 'error',
               message: err.message ?? String(e),
+              ...(err.code !== undefined && { code: err.code }),
               latency_ms,
             }),
           }],

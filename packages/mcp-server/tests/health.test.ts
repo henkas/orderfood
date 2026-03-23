@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthError } from '@orderfood/shared';
+import { AuthError, RateLimitError } from '@orderfood/shared';
 
 // Mock getClient before importing the module under test
 vi.mock('../src/config.js', () => ({
@@ -22,7 +22,7 @@ function makeServerStub() {
 
 describe('ping_platform', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('returns status ok when getPaymentMethods resolves', async () => {
@@ -39,6 +39,7 @@ describe('ping_platform', () => {
     expect(body.status).toBe('ok');
     expect(body.platform).toBe('ubereats');
     expect(typeof body.latency_ms).toBe('number');
+    expect((result as { isError?: boolean }).isError).toBeFalsy();
   });
 
   it('returns status auth_error when AuthError is thrown', async () => {
@@ -57,6 +58,7 @@ describe('ping_platform', () => {
     expect(body.status).toBe('auth_error');
     expect(body.message).toContain('npx @henkas/orderfood setup');
     expect(result.isError).toBe(true);
+    expect(body.platform).toBe('thuisbezorgd');
   });
 
   it('returns status error for non-auth failures', async () => {
@@ -74,6 +76,24 @@ describe('ping_platform', () => {
 
     expect(body.status).toBe('error');
     expect(body.message).toBe('network timeout');
+    expect(result.isError).toBe(true);
+  });
+
+  it('returns status rate_limited with retry_after when RateLimitError is thrown', async () => {
+    const mockClient = {
+      getPaymentMethods: vi.fn().mockRejectedValue(new RateLimitError('rate limited', 30)),
+    };
+    vi.mocked(config.getClient).mockReturnValue(mockClient as never);
+
+    const { registerHealthTools } = await import('../src/tools/health.js');
+    const server = makeServerStub();
+    registerHealthTools(server as never);
+
+    const result = await server.handlers['ping_platform']({ platform: 'ubereats' }) as { content: { text: string }[]; isError: boolean };
+    const body = JSON.parse(result.content[0].text);
+
+    expect(body.status).toBe('rate_limited');
+    expect(body.retry_after).toBe(30);
     expect(result.isError).toBe(true);
   });
 });
