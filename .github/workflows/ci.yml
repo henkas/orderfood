@@ -31,6 +31,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Verify packed npm artifact
+        run: pnpm --filter @henkas/orderfood check:pack
+
       - name: Typecheck
         run: pnpm typecheck
 
