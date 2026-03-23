@@ -10,6 +10,18 @@ MCP server that lets AI agents search restaurants and place food delivery orders
 
 ---
 
+## Who this is for
+
+- **AI power users** who want to tell Claude or Codex "find me sushi nearby and add the best-rated option to my cart" and have it actually work
+- **Developers** exploring MCP server design for real-world consumer API integrations
+- **Researchers** studying reverse-engineered API interoperability under EU Directive 2009/24/EC Article 6
+
+## Who this is not for
+
+- Anyone looking for a fully automated "place order without touching anything" experience — order placement requires a browser payment step on both platforms and is not yet automatable (see Platform Support below)
+- High-volume or commercial use — this tool is designed for personal, single-account use only
+- Users who need a rock-solid session — Uber Eats cookies expire in 24–48 hours and require manual refresh; Thuisbezorgd tokens auto-refresh but the APIs can change without notice
+
 ## Features
 
 | Tool | Description |
@@ -30,17 +42,20 @@ All tools accept `platform: "ubereats" | "thuisbezorgd"` as a required parameter
 
 ## Platform Support
 
-| Capability | Uber Eats | Thuisbezorgd |
-|---|---|---|
-| Search restaurants | ✅ | ✅ |
-| Get restaurant + menu | ✅ | ✅ |
-| Cart management | ✅ | ✅ |
-| Saved addresses | — | ✅ |
-| Payment methods | ✅ | ✅ |
-| Place order | ⚠️ needs browser payment flow | ⚠️ Adyen-hosted, out of scope |
-| Track order | ✅ | 🚧 stub |
-| Order history | 🚧 stub | 🚧 stub |
-| Cancel order | 🚧 stub | 🚧 stub |
+| Capability | Uber Eats | Thuisbezorgd | Notes |
+|---|---|---|---|
+| Search restaurants | ✅ | ✅ | |
+| Get restaurant + menu | ✅ | ✅ | TB uses SSR HTML scraping |
+| Cart management | ✅ | ✅ | |
+| Saved addresses | — | ✅ | UE resolves addresses on-the-fly |
+| Payment methods | ✅ | ✅ | |
+| Place order | ⚠️ | ⚠️ | Blocked by browser payment flow (Apple Pay / iDeal / Adyen) |
+| Track order | ✅ | 🚧 | TB tracking endpoint not yet captured |
+| Order history | 🚧 | 🚧 | Endpoint captured but request body not confirmed |
+| Cancel order | 🚧 | 🚧 | Endpoint not yet captured |
+| Health check | ✅ | ✅ | `ping_platform` tool verifies auth + connectivity |
+
+**Legend:** ✅ working · ⚠️ blocked by external dependency · 🚧 stub (API not yet captured) · — not applicable
 
 ## Architecture
 
