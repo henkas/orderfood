@@ -4,6 +4,7 @@ import { registerDiscoveryTools } from './tools/discovery.js';
 import { registerCartTools } from './tools/cart.js';
 import { registerOrderTools } from './tools/orders.js';
 import { registerAccountTools } from './tools/account.js';
+import { registerHealthTools } from './tools/health.js';
 
 const server = new McpServer({
   name: 'orderfood',
@@ -14,6 +15,7 @@ registerDiscoveryTools(server);
 registerCartTools(server);
 registerOrderTools(server);
 registerAccountTools(server);
+registerHealthTools(server);
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
